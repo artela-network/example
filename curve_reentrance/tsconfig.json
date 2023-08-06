@@ -1,0 +1,6 @@
+{
+  "extends": "assemblyscript/std/assembly",
+  "include": [
+    "./assembly/**/*.ts"
+  ]
+}
