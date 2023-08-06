@@ -37,28 +37,34 @@ To reproduce the attack and show how Aspect can protect runtime reentrancy, we h
 To reproduce the attack, you need to install solc and vyper (specific version with reentrant lock bug) first
 
    ```bash
-   pip install -g vyper==0.2.16
+   pip install vyper==0.2.16
    npm install -g solc@0.8.20
    ```
 
 ## Run
 
-1. Build smart contracts and aspects
+1. Install Nodejs dependencies
+
+    ```bash
+   npm install
+    ```
+
+2. Build smart contracts and aspects
 
     ```bash
    npm run build
     ```
 
-2. Execute the re-entrant attack on the simplified Curve contract, and observe the log events in the receipt. If the reentrant attack succeeded, you will see both `AddLiquidity` and `RemoveLiquidity` events logged.
+3. Execute the re-entrant attack on the simplified Curve contract, and observe the log events in the receipt. If the reentrant attack succeeded, you will see both `AddLiquidity` and `RemoveLiquidity` events logged.
 
     ```bash
-   npm run reentant:attack
+   npm run reentrant:attack
     ```
 
-3. Execute the re-entrant attack on the simplified Curve contract with Aspect protection, and observe the receipt. If the protection succeeded, you will see the transaction gets reverted.
+4. Execute the re-entrant attack on the simplified Curve contract with Aspect protection, and observe the receipt. If the protection succeeded, you will see the transaction gets reverted.
 
     ```bash
-   npm run reentant:guard
+   npm run reentrant:guard
     ```
 
 
