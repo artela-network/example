@@ -15,6 +15,8 @@ This is  how the attack happens in short:
 
 To delve into the attack details, you can check out the attack transaction [here](https://explorer.phalcon.xyz/tx/eth/0xa84aa065ce61dbb1eb50ab6ae67fc31a9da50dd2c74eefd561661bfce2f1620c).
 
+> Learn [How does Aspect Programming prevent reentrancy attacks through on-chain runtime protection](https://github.com/artela-network/example/blob/main/curve_reentrance/README.md).
+
 The example contract and Aspect provided in this repo are mainly the following 3 files:
 
 **contracts/curve.vy**
