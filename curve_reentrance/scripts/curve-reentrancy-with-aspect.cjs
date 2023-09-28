@@ -17,7 +17,7 @@ const sendOption = {
 
 async function reentrant() {
     // init connection to Artela node
-    const web3 = new Web3('https://artela-devnet-rpc1.artela.network');
+    const web3 = new Web3('http://127.0.0.1:8545');
 
     // retrieve accounts
     let accounts = await web3.atl.getAccounts();
@@ -87,7 +87,8 @@ async function reentrant() {
         properties: [{'key': 'CurveAddr', 'value': curveAddress}, {
             'key': 'binding',
             'value': curveAddress
-        }, {'key': 'owner', 'value': AspectDeployer}]
+        }, {'key': 'owner', 'value': AspectDeployer}],
+        paymaster: accounts[2],
     }).send({from: AspectDeployer, nonce: nonceValAspectDeployer, ...sendOption});
 
     console.log("== aspect address: ==" + aspect.options.address);
@@ -111,8 +112,12 @@ async function reentrant() {
         });
     console.log("Successfully bound Aspect with curve contract.")
 
-    // wait for block committing
-    await new Promise(r => setTimeout(r, 2000));
+    await curveContract.methods.remove_liquidity()
+        .send({from: curveDeployer, nonce: curveNonceVal + 2, ...sendOption})
+        .on('receipt', function (receipt) {
+            console.log('🐸🐸');
+            console.log(receipt);
+        });
 
     // Step5. call "Attach" contract method "attack"
     //
