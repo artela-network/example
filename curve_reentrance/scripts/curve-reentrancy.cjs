@@ -5,9 +5,9 @@ const fs = require("fs");
 
 // load contact abis and bins
 const attackBin = '0x' + fs.readFileSync('./build/contract/Attack.bin', "utf-8").toString().trim();
-const attackAbi = JSON.parse(fs.readFileSync('./build/contract/Attack.abi', "utf-8"));
 const curveBin = fs.readFileSync('./build/contract/CurveContract.bin', "utf-8").toString().trim();
 const curveAbi = JSON.parse(fs.readFileSync('./build/contract/CurveContract.abi', "utf-8"));
+const attackAbi = JSON.parse(fs.readFileSync('./build/contract/Attack.abi', "utf-8")).concat(curveAbi.filter(item => item.type === 'event'));
 
 const sendOption = {
     gasPrice: '1000000010', // Default gasPrice set by Geth
