@@ -1,6 +1,6 @@
 # Aspect Examples
 
-This repository maintains a set of Aspect examples and these cases are inspired by real world scenarios. More cases will be continuously added here if we have thought of any interesting stuffs. If you have thought of any interesting ideas that can enhancing dApp functionality or user experience with Aspects, feel free to create a pull request!
+This repository maintains a collection of Aspect examples inspired by real-world scenarios. More cases will be continuously added here as we come up with interesting ideas. If you have any intriguing concepts that can enhance dApp functionality or user experience with Aspects, please feel free to create a pull request!
 
 ### Cases
 
