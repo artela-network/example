@@ -87,9 +87,7 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
         // Get the method of currently called contract.
         const currentCallMethod = ethereum.parseMethodSig(ctx.currentCall.data);
 
-        // Define functions that are not susceptible to reentrancy.
-        // - 0xec45ef89: sig of add_liquidity
-        // - 0xe446bfca: sig of remove_liquidity
+        // Define functions that are not allowed to be reentered.
         const noReentrantMethods : Array<string> = [
             ethereum.computeMethodSig('add_liquidity()'),
             ethereum.computeMethodSig('remove_liquidity()')
@@ -98,31 +96,18 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
         // Verify if the current method is within the scope of functions that are not susceptible to reentrancy.
         if (noReentrantMethods.includes(currentCallMethod)) {
             // Check if there already exists a non-reentrant method on the current call path.
-            let currentCallIdx = ctx.currentCall.index;
-            vm.log(`🐸: in curve guard aspect - 4   ${currentCallIdx}                    `);
+            let parentIndex = ctx.currentCall.parentIndex;
             // Retrieve the call stack from the context, which refers to
             // all contract calls along the path of the current contract method invocation.
-            vm.log('🐸: in curve guard aspect - 4.5            ');
-            const currentCall = ctx.trace.findCall(currentCallIdx)!;
-            vm.log(`🐸: in curve guard aspect - 5                       `);
-            while (currentCallIdx > 0) {
-                vm.log(`🐸: in curve guard aspect - 6                       `);
-                const parentIndex = currentCall.parentIndex;
-                vm.log(`🐸: in curve guard aspect - 7                       `);
+            while (parentIndex >= 0) {
                 const parentCall = ctx.trace.findCall(parentIndex)!;
-                vm.log(`🐸: in curve guard aspect - 8                       `);
                 const parentCallMethod = ethereum.parseMethodSig(parentCall.data);
-                vm.log(`🐸: in curve guard aspect - 9                       `);
                 if (noReentrantMethods.includes(parentCallMethod)) {
-                    vm.log(`🐸: in curve guard aspect - 10                       `);
                     // If yes, revert the transaction.
-                    vm.log(`🐸: illegal transaction: method reentered from ${currentCallMethod} to ${parentCallMethod}`);
                     vm.revert(`illegal transaction: method reentered from ${currentCallMethod} to ${parentCallMethod}`);
                 }
-                currentCallIdx = parentIndex;
-                vm.log(`🐸: in curve guard aspect - 11                       `);
+                parentIndex = parentCall.parentIndex;
             }
-            vm.log(`🐸: in curve guard aspect - 12                       `);
         }
     }
 

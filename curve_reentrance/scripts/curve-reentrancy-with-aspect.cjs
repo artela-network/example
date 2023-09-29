@@ -9,23 +9,18 @@ const attackAbi = JSON.parse(fs.readFileSync('./build/contract/Attack.abi', "utf
 const curveBin = fs.readFileSync('./build/contract/CurveContract.bin', "utf-8").toString().trim();
 const curveAbi = JSON.parse(fs.readFileSync('./build/contract/CurveContract.abi', "utf-8"));
 
-const sendOption = {
-    gasPrice: '1000000010', // Default gasPrice set by Geth
-    gas: 4000000
-};
+const defaultGas = 4000000;
 
 
 async function reentrant() {
-    // init connection to Artela node
+    // Step0: prepare the environment
     const web3 = new Web3('http://127.0.0.1:8545');
-
-    // retrieve accounts
-    let accounts = await web3.atl.getAccounts();
-
-    // retrieve current nonce
-    let curveDeployer = accounts[0]
-    let curveNonceVal = await web3.atl.getTransactionCount(curveDeployer);
-
+    const accounts = await web3.atl.getAccounts();
+    const curveDeployer = accounts[0]
+    const curveNonceVal = await web3.atl.getTransactionCount(curveDeployer);
+    const attackDeployer = accounts[1]
+    const attackNonceVal = await web3.atl.getTransactionCount(attackDeployer);
+    const gasPrice = await web3.atl.getGasPrice();
 
     // Step1: deploy curve contract to artela
     //
@@ -35,10 +30,17 @@ async function reentrant() {
     // Contract at: reentrance/contracts/curve.sol
     console.log("\ncurve contract is deploying...");
     let curveAddress;
-    let curveContract = await new web3.atl.Contract(curveAbi).deploy({data: curveBin})
-        .send({from: curveDeployer, nonce: curveNonceVal, ...sendOption})
+    let curveContract = new web3.atl.Contract(curveAbi);
+    let curveDeployTx = curveContract.deploy({data: curveBin});
+    curveContract = await curveDeployTx
+        .send({
+            from: curveDeployer,
+            nonce: curveNonceVal,
+            gas: defaultGas,
+            gasPrice
+        })
         .on('receipt', function (receipt) {
-            curveAddress = receipt.contractAddress
+            curveAddress = receipt.contractAddress;
         });
     console.log("== curve_address ==", curveAddress);
     console.log("== curve_account ==", curveDeployer);
@@ -52,15 +54,17 @@ async function reentrant() {
     //
     // Contract at: reentrance/contracts/Attack.sol
     console.log("\nattack contract is deploying...")
-    let attackDeployer = accounts[1]
-    let attackNonceVal = await web3.atl.getTransactionCount(attackDeployer);
-
     let attackAddress;
-    let attackContract = await new web3.atl.Contract(attackAbi).deploy(
-        {data: attackBin, arguments: [curveAddress]}).send({
+    let attackContract = new web3.atl.Contract(attackAbi);
+    const attackDeployTx = attackContract.deploy({
+            data: attackBin,
+            arguments: [curveAddress]
+        });
+    attackContract = await attackDeployTx.send({
         from: attackDeployer,
         nonce: attackNonceVal,
-        ...sendOption
+        gas: defaultGas,
+        gasPrice
     }).on('receipt', function (receipt) {
         attackAddress = receipt.contractAddress
     });
@@ -82,40 +86,58 @@ async function reentrant() {
     let aspectCode = fs.readFileSync('./build/release.wasm', {
         encoding: "hex"
     });
-    let aspect = await new web3.atl.Aspect().deploy({
+    let aspect = new web3.atl.Aspect();
+    const aspectDeployTx = aspect.deploy({
         data: '0x' + aspectCode,
         properties: [{'key': 'CurveAddr', 'value': curveAddress}, {
             'key': 'binding',
             'value': curveAddress
         }, {'key': 'owner', 'value': AspectDeployer}],
         paymaster: accounts[2],
-    }).send({from: AspectDeployer, nonce: nonceValAspectDeployer, ...sendOption});
+    });
+    aspect = await aspectDeployTx.send({
+        from: AspectDeployer,
+        nonce: nonceValAspectDeployer,
+        gas: defaultGas,
+        gasPrice
+    });
 
-    console.log("== aspect address: ==" + aspect.options.address);
+    let aspectId = aspect.options.address;
+    console.log("== aspect address: ==" + aspectId);
     console.log("Aspect is deployed successfully.");
-
     console.log("\nBinding Aspect with curve contract...");
-    await new Promise(r => setTimeout(r, 2000));
-    let aspectId = aspect.options.address
 
     // Step4: bind curve contract with the Security Aspect
     //
     // Bind the curve asset management contract, deployed in Step1 (the contract being attacked),
     // to the security check contract deployed in Step5 on the blockchain.
-    await curveContract.bind({
+    const curveContractBindTx = curveContract.bind({
         priority: 1,
         aspectId: aspectId,
         aspectVersion: 1,
-    }).send({from: curveDeployer, nonce: curveNonceVal + 1})
-        .on('transactionHash', (txHash) => {
-            console.log("contract binding tx hash: ", txHash);
-        });
+    });
+    await curveContractBindTx.send({
+        from: curveDeployer,
+        nonce: curveNonceVal + 1,
+        gas: defaultGas,
+        gasPrice
+    }).on('transactionHash', (txHash) => {
+        console.log("contract binding tx hash: ", txHash);
+    });
     console.log("Successfully bound Aspect with curve contract.")
 
+    console.log("\ntry to remove liquidity without reentrancy...")
     await curveContract.methods.remove_liquidity()
-        .send({from: curveDeployer, nonce: curveNonceVal + 2, ...sendOption})
+        .send({
+            from: curveDeployer,
+            nonce: curveNonceVal + 2,
+            gas: defaultGas,
+            gasPrice,
+        })
+        .on('transactionHash', (txHash) => {
+            console.log("remove liquidity tx hash: ", txHash);
+        })
         .on('receipt', function (receipt) {
-            console.log('🐸🐸');
             console.log(receipt);
         });
 
@@ -124,13 +146,16 @@ async function reentrant() {
     // The logic within the attach function will be triggered.
     // Utilizing the code from the curve contract,
     // an attempt is made to bypass the balance restriction and perform a withdrawal activity.
-    console.log("\ncalling attack...")
+    console.log("\ncalling attack contract... \nremoving liquidity with reentrancy...")
     try {
         await attackContract.methods.attack()
-            .send({from: accounts[1], nonce: attackNonceVal + 1})
-            .on('receipt', (receipt) => {
-                console.log("receipt.events: ", receipt.events);
+            .send({
+                from: accounts[1],
+                nonce: attackNonceVal + 1,
+                gas: defaultGas,
+                gasPrice
             });
+        console.log('remove liquidity success with reentrancy!');
     } catch (err) {
         console.log(err);
     }
