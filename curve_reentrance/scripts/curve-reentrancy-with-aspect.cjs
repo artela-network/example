@@ -14,7 +14,7 @@ const defaultGas = 4000000;
 
 async function reentrant() {
     // Step0: prepare the environment
-    const web3 = new Web3('http://127.0.0.1:8545');
+    const web3 = new Web3('https://artela-devnet-rpc1.artela.network');
     const accounts = await web3.atl.getAccounts();
     const curveDeployer = accounts[0]
     const curveNonceVal = await web3.atl.getTransactionCount(curveDeployer);
