@@ -1,3 +1,4 @@
+
 import {Entry, vm} from "@artela/aspect-libs";
 import {Aspect} from "./aspect/aspect";
 

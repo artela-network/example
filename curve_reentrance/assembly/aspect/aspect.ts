@@ -1,18 +1,19 @@
+
 import {
-    ethereum,
     FilterTxCtx,
     IAspectBlock,
-    IAspectOperation,
     IAspectTransaction,
+    IAspectOperation,
     OnBlockFinalizeCtx,
     OnBlockInitializeCtx,
-    OperationCtx,
     PostContractCallCtx,
     PostTxCommitCtx,
     PostTxExecuteCtx,
     PreContractCallCtx,
     PreTxExecuteCtx,
-    vm,
+    OperationCtx,
+    ethereum,
+    vm
 } from "@artela/aspect-libs";
 
 /**
@@ -20,11 +21,10 @@ import {
  * Transaction-Level Aspect will be triggered whenever there is a transaction calling the bound smart contract.
  * Block-Level Aspect will be triggered whenever there is a new block generated.
  *
- * An Aspect can be Transaction-Level, Block-Level, IAspectOperation or both.
+ * An Aspect can be Transaction-Level, Block-Level,IAspectOperation or both.
  * You can implement corresponding interfaces: IAspectTransaction, IAspectBlock,IAspectOperation or both to tell Artela which
  * type of Aspect you are implementing.
  */
-
 export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperation {
     /**
      * isOwner is the governance account implemented by the Aspect, when any of the governance operation
@@ -169,10 +169,9 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
      * operation is a Aspect call.
      *
      * @param ctx  tx input
-     * @param data
      * @return result of operation execution
      */
-    operation(ctx: OperationCtx, data: Uint8Array): Uint8Array {
+    operation(ctx: OperationCtx, data: Uint8Array): Uint8Array{
         // Implement me...
         return new Uint8Array(0);
     }
