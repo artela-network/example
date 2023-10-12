@@ -1,5 +1,5 @@
 
-import {Entry, vm} from "@artela/aspect-libs";
+import {Entry} from "@artela/aspect-libs";
 import {Aspect} from "./aspect/aspect";
 
 const aspect = new Aspect();
@@ -18,5 +18,5 @@ export function isTransactionLevel(): i32 {
 }
 
 export function allocate(size: i32): i32 {
-  return vm.alloc(size);
+  return heap.alloc(size) as i32;
 }

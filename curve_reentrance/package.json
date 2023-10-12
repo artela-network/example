@@ -25,14 +25,14 @@
   "devDependencies": {
     "assemblyscript": "^0.27.5",
     "as-proto-gen": "^1.3.0",
-    "@artela/aspect-tool": "^0.0.37",
+    "@artela/aspect-tool": "^0.0.38",
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@artela/aspect-libs": "^0.0.21",
-    "@artela/web3": "^1.9.14",
-    "@artela/web3-atl-aspect": "^1.9.14",
-    "@artela/web3-eth-contract": "^1.9.14",
+    "@artela/aspect-libs": "^0.0.22",
+    "@artela/web3": "^1.9.16",
+    "@artela/web3-atl-aspect": "^1.9.16",
+    "@artela/web3-eth-contract": "^1.9.15",
     "@artela/web3-utils": "^1.9.8",
     "@assemblyscript/loader": "^0.27.5",
     "as-proto": "^1.3.0"

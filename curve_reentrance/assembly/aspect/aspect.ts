@@ -12,8 +12,7 @@ import {
     PreContractCallCtx,
     PreTxExecuteCtx,
     OperationCtx,
-    ethereum,
-    vm
+    ethereum, sys,
 } from "@artela/aspect-libs";
 
 /**
@@ -104,7 +103,7 @@ export class Aspect implements IAspectTransaction, IAspectBlock, IAspectOperatio
                 const parentCallMethod = ethereum.parseMethodSig(parentCall.data);
                 if (noReentrantMethods.includes(parentCallMethod)) {
                     // If yes, revert the transaction.
-                    vm.revert(`illegal transaction: method reentered from ${currentCallMethod} to ${parentCallMethod}`);
+                    sys.revert(`illegal transaction: method reentered from ${currentCallMethod} to ${parentCallMethod}`);
                 }
                 parentIndex = parentCall.parentIndex;
             }
