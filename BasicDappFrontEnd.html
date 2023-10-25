@@ -1,0 +1,47 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple DApp</title>
+</head>
+<body>
+    <h1>Simple DApp</h1>
+    <input type="text" id="key" placeholder="Enter a key">
+    <input type="text" id="value" placeholder="Enter a value">
+    <button onclick="setValue()">Set Value</button>
+    <button onclick="getValue()">Get Value</button>
+    <p id="output"></p>
+
+    <script src="https://cdn.nearprotocol.com/near-api-js/4.3.0/near-api-js.js"></script>
+    <script>
+        // Initialize the NEAR connection
+        const near = new nearAPI.Near();
+
+        // Create a new connection to the NEAR network
+        const contractAddress = "CONTRACT_ADDRESS"; // Replace with the actual contract address
+        const key = document.getElementById("key");
+        const value = document.getElementById("value");
+        const output = document.getElementById("output");
+
+        // Set a value in the smart contract
+        async function setValue() {
+            const keyVal = key.value;
+            const valueVal = value.value;
+
+            const contract = await near.contract.connect(contractAddress, nearAPI.utils.keyStore);
+
+            await contract.set({ key: keyVal, value: valueVal });
+            output.innerText = `Set ${keyVal} to ${valueVal}`;
+        }
+
+        // Get a value from the smart contract
+        async function getValue() {
+            const keyVal = key.value;
+            const contract = await near.contract.connect(contractAddress, nearAPI.utils.keyStore);
+            const result = await contract.get({ key: keyVal });
+            output.innerText = `Value for ${keyVal}: ${result}`;
+        }
+    </script>
+</body>
+</html>
