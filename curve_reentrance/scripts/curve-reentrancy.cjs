@@ -8,6 +8,7 @@ const attackBin = '0x' + fs.readFileSync('./build/contract/Attack.bin', "utf-8")
 const curveBin = fs.readFileSync('./build/contract/CurveContract.bin', "utf-8").toString().trim();
 const curveAbi = JSON.parse(fs.readFileSync('./build/contract/CurveContract.abi', "utf-8"));
 const attackAbi = JSON.parse(fs.readFileSync('./build/contract/Attack.abi', "utf-8")).concat(curveAbi.filter(item => item.type === 'event'));
+const privateKey = fs.readFileSync('./private.key', "utf-8").toString().trim();
 
 const sendOption = {
     gasPrice: '1000000010', // Default gasPrice set by Geth
@@ -16,14 +17,14 @@ const sendOption = {
 
 async function reentrant() {
     // init connection to Artela node
-    const web3 = new Web3('https://artela-devnet-rpc1.artela.network');
+    const web3 = new Web3('https://betanet-rpc1.artela.network');
+    // const web3 = new Web3('http://127.0.0.1:8545');
 
-    // retrieve accounts
-    let accounts = await web3.atl.getAccounts();
+    // init accounts
+    const sender = web3.eth.accounts.wallet.add(privateKey).address;
 
     // retrieve current nonce
-    let curveDeployer = accounts[0]
-    let curveNonceVal = await web3.atl.getTransactionCount(curveDeployer);
+    let curveNonceVal = await web3.eth.getTransactionCount(sender);
 
 
     // Step1: deploy curve contract to artela
@@ -34,13 +35,13 @@ async function reentrant() {
     // Contract at: reentrance/contracts/curve.sol
     console.log("\ncurve contract is deploying...");
     let curveAddress;
-    let curveContract = await new web3.atl.Contract(curveAbi).deploy({data: curveBin})
-        .send({from: curveDeployer, nonce: curveNonceVal, ...sendOption})
+    await new web3.eth.Contract(curveAbi).deploy({data: curveBin})
+        .send({from: sender, nonce: curveNonceVal, ...sendOption})
         .on('receipt', function (receipt) {
             curveAddress = receipt.contractAddress
         });
     console.log("== curve_address ==", curveAddress);
-    console.log("== curve_account ==", curveDeployer);
+    console.log("== curve_account ==", sender);
     console.log("curve contract is deployed successfully.");
 
 
@@ -51,11 +52,11 @@ async function reentrant() {
     //
     // Contract at: reentrance/contracts/Attack.sol
     console.log("\nattack contract is deploying...")
-    let attackDeployer = accounts[1]
-    let attackNonceVal = await web3.atl.getTransactionCount(attackDeployer);
+    let attackDeployer = sender;
+    let attackNonceVal = await web3.eth.getTransactionCount(attackDeployer);
 
     let attackAddress;
-    let attackContract = await new web3.atl.Contract(attackAbi).deploy(
+    let attackContract = await new web3.eth.Contract(attackAbi).deploy(
         {data: attackBin, arguments: [curveAddress]}).send({
         from: attackDeployer,
         nonce: attackNonceVal,
@@ -79,7 +80,7 @@ async function reentrant() {
     console.log("\ncalling attack...")
     try {
         await attackContract.methods.attack()
-            .send({from: accounts[1], nonce: attackNonceVal + 1, ...sendOption})
+            .send({from: sender, nonce: attackNonceVal + 1, ...sendOption})
             .on('receipt', (receipt) => {
                 console.log("receipt.events: ", receipt.events);
             })

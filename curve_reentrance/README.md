@@ -45,6 +45,8 @@ To reproduce the attack, you need to install solc and vyper (specific version wi
    npm install -g solc@0.8.20
    ```
 
+Put your private key hex with some ART in `private.key` file in the root folder. 
+
 ## Run
 
 1. Install Nodejs dependencies
