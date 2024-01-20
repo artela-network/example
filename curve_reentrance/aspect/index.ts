@@ -39,31 +39,7 @@ class Aspect implements IPreContractCallJP {
      * @param input input to the current join point
      */
     preContractCall(input: PreContractCallInput): void {
-        // Get the method of currently called contract.
-        const currentCallMethod = ethereum.parseMethodSig(input.call!.data);
-
-        // Define functions that are not allowed to be reentered.
-        const noReentrantMethods : Array<string> = [
-            ethereum.computeMethodSig('add_liquidity()'),
-            ethereum.computeMethodSig('remove_liquidity()')
-        ];
-
-        // Verify if the current method is within the scope of functions that are not susceptible to reentrancy.
-        if (noReentrantMethods.includes(currentCallMethod)) {
-            // Check if there already exists a non-reentrant method on the current call path.
-            const callTreeQuery = new CallTreeQuery(-1);
-            const callTreeRaw = sys.hostApi.trace.queryCallTree(callTreeQuery);
-            const callTree = Protobuf.decode<EthCallTree>(callTreeRaw, EthCallTree.decode);
-            let parentCallIndex = callTree.calls.get(input.call!.index).parentIndex;
-            while (parentCallIndex >= 0) {
-                const parentCall = callTree.calls.get(parentCallIndex)
-                if (noReentrantMethods.includes(ethereum.parseMethodSig(parentCall.data))) {
-                    // If yes, revert the transaction.
-                    sys.revert(`illegal transaction: method reentered from ${currentCallMethod} to ${ethereum.parseMethodSig(parentCall.data)}`);
-                }
-                parentCallIndex = parentCall.parentIndex;
-            }
-        }
+        // implement guard logic here...
     }
 }
 
