@@ -12,8 +12,8 @@
     "asbuild:release": "asc aspect/index.ts --target release",
     "contract:bind": "node scripts/bind.cjs",
     "contract:deploy": "node scripts/contract-deploy.cjs",
-    "contract:build": "solc -o ./build/contract/ --via-ir --abi --storage-layout --bin ./contracts/*.sol --overwrite",
-    "build": "npm run contract:build && npm run aspect:gen && npm run aspect:build",
+    "contract:build": "solc -o ./build/contract/ --via-ir --abi --storage-layout --bin ./contracts/*.sol  --overwrite && vyper -f abi ./contracts/curve.vy > build/contract/CurveContract.abi && vyper ./contracts/curve.vy > build/contract/CurveContract.bin",
+    "build": "npm run contract:build && npm run aspect:build",
     "reentrant:attack": "node scripts/curve-reentrancy.cjs",
     "reentrant:guard": "node scripts/curve-reentrancy-with-aspect.cjs"
   },
