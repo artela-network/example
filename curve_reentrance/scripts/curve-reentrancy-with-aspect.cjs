@@ -78,23 +78,28 @@ async function reentrant() {
     encoding: "hex"
   });
   let aspect = new web3.atl.Aspect();
-  aspect = await aspect.deploy({
+  const aspectDeployCallData = aspect.deploy({
     data: '0x' + aspectCode,
     properties: [],
     paymaster: sender,
     proof: '0x',
     joinPoints: [ 'PreContractCall' ]
-  }).send({
-    from: sender,
-    gas: 4000000,
-    nonce: nonce + 2,
-    gasPrice
-  }).on('receipt', function (receipt) {
-    console.log("receipt: ", receipt);
-  });
+  }).encodeABI();
 
-  let aspectId = aspect.options.address;
-  console.log("== aspect address: ==" + aspectId);
+  const deployTx = {
+    from: sender,
+    to: '0x0000000000000000000000000000000000A27E14',
+    data: aspectDeployCallData,
+    nonce: nonce + 2,
+    gas: 2000000,
+    gasPrice
+  }
+
+  let signedTx = await web3.eth.accounts.signTransaction(deployTx, privateKey);
+  let receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+  let aspectId = receipt.aspectAddress;
+  console.log("== aspect address: ==", aspectId);
   console.log("Aspect is deployed successfully.");
   console.log("\nBinding Aspect with curve contract...");
 
@@ -102,19 +107,23 @@ async function reentrant() {
   //
   // Bind the curve asset management contract, deployed in Step1 (the contract being attacked),
   // to the security check contract deployed in Step5 on the blockchain.
-  const curveContractBindTx = curveContract.bind({
+  const curveContractBindCallData = curveContract.bind({
     priority: 1,
     aspectId: aspectId,
     aspectVersion: 1,
-  });
-  await curveContractBindTx.send({
+  }).encodeABI();
+
+  const curveContractBindTx = {
     from: sender,
-    gas: 2000000,
+    to: '0x0000000000000000000000000000000000A27E14',
+    data: curveContractBindCallData,
     nonce: nonce + 3,
+    gas: 2000000,
     gasPrice
-  }).on('transactionHash', (txHash) => {
-    console.log("contract binding tx hash: ", txHash);
-  });
+  }
+
+  signedTx = await web3.eth.accounts.signTransaction(curveContractBindTx, privateKey);
+  await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
   console.log("Successfully bound Aspect with curve contract.")
 
   console.log("\ntry to remove liquidity without reentrancy...")
