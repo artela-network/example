@@ -1,6 +1,6 @@
 "use strict"
 
-const Web3 = require('@artela/web3');
+const Web3 = require('@artela-next/web3');
 const fs = require("fs");
 
 // load contact abis and bins
@@ -17,8 +17,8 @@ const sendOption = {
 
 async function reentrant() {
     // init connection to Artela node
-    const web3 = new Web3('https://betanet-rpc1.artela.network');
-    // const web3 = new Web3('http://127.0.0.1:8545');
+    // const web3 = new Web3('https://betanet-rpc1.artela.network');
+    const web3 = new Web3('http://127.0.0.1:8545');
 
     // init accounts
     const sender = web3.eth.accounts.wallet.add(privateKey).address;

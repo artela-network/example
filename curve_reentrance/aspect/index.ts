@@ -8,10 +8,11 @@ import {
     CallTreeQuery,
     EthCallTree,
     ethereum,
-    sys
-} from "@artela/aspect-libs";
+    sys,
+    InitInput
+} from "@artela-next/aspect-libs";
 
-import { Protobuf } from "as-proto/assembly/Protobuf";
+import {Protobuf} from "as-proto/assembly/Protobuf";
 
 /**
  * Please describe what functionality this aspect needs to implement.
@@ -20,6 +21,9 @@ import { Protobuf } from "as-proto/assembly/Protobuf";
  * How to develop an Aspect  @see [Aspect Structure](https://docs.artela.network/develop/reference/aspect-lib/aspect-structure)
  */
 class Aspect implements IPreContractCallJP {
+    init(input: InitInput): void {
+        return
+    }
 
     /**
      * isOwner is the governance account implemented by the Aspect, when any of the governance operation
@@ -54,9 +58,9 @@ class Aspect implements IPreContractCallJP {
             const callTreeQuery = new CallTreeQuery(-1);
             const callTreeRaw = sys.hostApi.trace.queryCallTree(callTreeQuery);
             const callTree = Protobuf.decode<EthCallTree>(callTreeRaw, EthCallTree.decode);
-            let parentCallIndex = callTree.calls.get(input.call!.index).parentIndex;
+            let parentCallIndex = callTree.calls[input.call!.index as i32].parentIndex;
             while (parentCallIndex >= 0) {
-                const parentCall = callTree.calls.get(parentCallIndex)
+                const parentCall = callTree.calls[parentCallIndex as i32];
                 if (noReentrantMethods.includes(ethereum.parseMethodSig(parentCall.data))) {
                     // If yes, revert the transaction.
                     sys.revert(`illegal transaction: method reentered from ${currentCallMethod} to ${ethereum.parseMethodSig(parentCall.data)}`);
